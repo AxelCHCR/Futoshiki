@@ -4,6 +4,9 @@ from PIL import ImageTk, Image
 from random import randint
 
 numero=1
+nivel=[]
+juego=[0 for i in range(0,25)]
+continuar=True
 
 def cargar(dificultad):
     """
@@ -11,7 +14,12 @@ def cargar(dificultad):
     Salidas: pass
     Función: Cargar los niveles
     """
-    base=open(str('Niveles/'+dificultad+'/'+str(randint(1,3))+'.txt'), 'r', encoding='utf-8')
+    global nivel
+    global juego
+    nivel=[]
+    juego=[]
+    aleatorio=str(randint(1,3))
+    base=open(str('Niveles/'+dificultad+'/'+aleatorio+'.txt'), 'r', encoding='utf-8')
     numlineas=base.readlines()
     base.seek(0)
     nums=[]
@@ -19,7 +27,7 @@ def cargar(dificultad):
     for linea in numlineas:
         for i in linea.strip():
             if i.isdigit():
-                nums.append(i)
+                nums.append(int(i))
             else:
                 cmps.append(i)
     counter=0
@@ -40,18 +48,26 @@ def cargar(dificultad):
                 LabelCmp= Label(FrameJuego, image=imagen, bg='#b97a57',  highlightthickness = 0)
                 LabelCmp.grid(row=i, column=j)
     for i in range(0,25):
-        if   nums[i]=='1':
+        if   nums[i]==1:
             casillas[i].config(image=imgB1_)
-        elif nums[i]=='2':
+        elif nums[i]==2:
             casillas[i].config(image=imgB2_)
-        elif nums[i]=='3':
+        elif nums[i]==3:
             casillas[i].config(image=imgB3_)
-        elif nums[i]=='4':
+        elif nums[i]==4:
             casillas[i].config(image=imgB4_)
-        elif nums[i]=='5':
+        elif nums[i]==5:
             casillas[i].config(image=imgB5_)
         else:
             casillas[i].config(image=imgB0)
+    juego=nums
+    base=open(str('Niveles/'+dificultad+'/'+aleatorio+'_.txt'), 'r', encoding='utf-8')
+    numlineas=base.readlines()
+    base.seek(0)
+    for linea in numlineas:
+        for i in linea.strip():
+            nivel.append(int(i))
+    
 def switch(num):
     """
     Entradas: num (un entero del 1 al 5)
@@ -77,6 +93,46 @@ def switch(num):
         Bot5.config(image=img5_)    
     return
 
+def esValido(posicion):
+    global continuar
+
+    def stop(e):
+        """
+        Entradas: evento
+        Salidas: None
+        Función: Quita la pausa y el numero rojo
+        """
+        global continuar
+        LabelE.destroy()
+        continuar=True
+    if continuar:
+        prueba=[]
+        for i in juego:
+            prueba.append(i)
+        prueba[posicion] = numero
+
+        for i in range(len(nivel)):
+            if prueba[i]==0:
+                pass
+            elif prueba[i]!=nivel[i] or juego==prueba:
+                if numero==1:
+                    LabelE= Label(FrameJuego, image=imgB1D, bg='#b97a57',  highlightthickness = 0)
+                elif numero==2:
+                    LabelE= Label(FrameJuego, image=imgB2D, bg='#b97a57',  highlightthickness = 0)
+                elif numero==3:
+                    LabelE= Label(FrameJuego, image=imgB3D, bg='#b97a57',  highlightthickness = 0)  
+                elif numero==4:
+                    LabelE= Label(FrameJuego, image=imgB4D, bg='#b97a57',  highlightthickness = 0)
+                else:
+                    LabelE= Label(FrameJuego, image=imgB5D, bg='#b97a57',  highlightthickness = 0)
+                LabelE.grid(row=(posicion//5)*2, column=(posicion%5)*2)
+                ventana.bind('<Return>', stop)
+                continuar=False
+                return False
+        return True
+    else:
+        return False
+
 def apuntar(self, posicion):
     """
     Entradas: Casilla a cambiar, posicion de la casilla.
@@ -84,22 +140,46 @@ def apuntar(self, posicion):
     Función: Pone el numero en el tablero
              Hará alguna función con el registro de la pila, de momento pass
     """
-    print(posicion)
-    if numero==1:
-        self.config(image=imgB1)
-    elif numero==2:
-        self.config(image=imgB2)
-    elif numero==3:
-        self.config(image=imgB3)    
-    elif numero==4:
-        self.config(image=imgB4)
-    else:
-        self.config(image=imgB5)
+    def win(e):
+        """
+        Entradas: evento
+        Salidas: None
+        Función: Quita la pantalla de victoria
+        """
+        frame.pack()
+        frameVictoria.pack_forget()
+        ventana.config(bg='light gray')
+        return
+    
+    global juego
+
+    if continuar and esValido(posicion):
+        juego[posicion] = numero
+        if numero==1:
+            self.config(image=imgB1)
+        elif numero==2:
+            self.config(image=imgB2)
+        elif numero==3:
+            self.config(image=imgB3) 
+        elif numero==4:
+            self.config(image=imgB4)
+        else:
+            self.config(image=imgB5)
+        if nivel==juego:
+            frame.pack_forget()
+            frameVictoria.pack()
+            ventana.config(bg='orange')
+            ventana.bind('<Return>', win)
+    return
 
 #Objetos de ventana
 ventana = Tk()
-frame = Frame(ventana)
+pantalla_largo=ventana.winfo_screenwidth()//2
+pantalla_alto=ventana.winfo_screenheight()//2
+ventana.geometry( f'{740}x{560}+{(pantalla_largo)-370}+{(pantalla_alto)-280}')
 
+frame = Frame(ventana)
+frameVictoria = Frame(ventana, bg='orange')
 FrameOpciones = Frame(frame)
 FrameNums = Frame(frame)
 FrameJuego = Frame(frame, bg='#b97a57')
@@ -141,6 +221,12 @@ imgB2_        = ImageTk.PhotoImage(Image.open('images/Bloques/2_.png').resize((5
 imgB3_        = ImageTk.PhotoImage(Image.open('images/Bloques/3_.png').resize((50, 50), Image.NONE))
 imgB4_        = ImageTk.PhotoImage(Image.open('images/Bloques/4_.png').resize((50, 50), Image.NONE))
 imgB5_        = ImageTk.PhotoImage(Image.open('images/Bloques/5_.png').resize((50, 50), Image.NONE))
+
+imgB1D        = ImageTk.PhotoImage(Image.open('images/Bloques/1$.png').resize((50, 50), Image.NONE))
+imgB2D        = ImageTk.PhotoImage(Image.open('images/Bloques/2$.png').resize((50, 50), Image.NONE))
+imgB3D        = ImageTk.PhotoImage(Image.open('images/Bloques/3$.png').resize((50, 50), Image.NONE))
+imgB4D        = ImageTk.PhotoImage(Image.open('images/Bloques/4$.png').resize((50, 50), Image.NONE))
+imgB5D        = ImageTk.PhotoImage(Image.open('images/Bloques/5$.png').resize((50, 50), Image.NONE))
 
 imgN        = ImageTk.PhotoImage(Image.open('images/Bloques/..png'))
 imgA        = ImageTk.PhotoImage(Image.open('images/Bloques/A.png'))
@@ -202,6 +288,9 @@ LblTitulo.grid(row = 0, column=0, columnspan=6)
 FrameJuego.grid(row=1, column=0, columnspan=6)
 FrameNums.grid(row=1, column=5)
 FrameOpciones.grid(row=2, column=0, columnspan=6)
+
+LabelWin= Label(frameVictoria, text='¡EXCELENTE!', font=('Segoe UI', 80), fg='yellow', bg='orange',  highlightthickness = 0)
+LabelWin.pack(pady=200)
 
 #Bloques
 for i in range(9):
