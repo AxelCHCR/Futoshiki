@@ -7,19 +7,26 @@ numero=1
 nivel=[]
 juego=[0 for i in range(0,25)]
 continuar=True
+dificultad='Facil'
+pila=[]
+comparaciones=[]
 
-def cargar(dificultad):
+def cargar(numNivel):
     """
-    Entradas: dificultad (string 'Facil', Normal, Dificil)
-    Salidas: pass
-    Función: Cargar los niveles
+    E: Número del nivel (1 al 3)
+    S: None
+    Función: Inicia el juego
     """
     global nivel
     global juego
-    nivel=[]
+    global comparaciones
+    global pila
+
+    nivel=[numNivel, []]
     juego=[]
-    aleatorio=str(randint(1,3))
-    base=open(str('Niveles/'+dificultad+'/'+aleatorio+'.txt'), 'r', encoding='utf-8')
+    pila=[]
+
+    base=open(str('Niveles/'+dificultad+'/'+numNivel+'.txt'), 'r', encoding='utf-8')
     numlineas=base.readlines()
     base.seek(0)
     nums=[]
@@ -31,6 +38,9 @@ def cargar(dificultad):
             else:
                 cmps.append(i)
     counter=0
+    if len(comparaciones)!=0:
+        for i in comparaciones:
+            i.destroy()
     for i in range(9):
         for j in range(9):
             if i%2==1 or j%2==1:
@@ -45,8 +55,8 @@ def cargar(dificultad):
                 else:
                     imagen=imgD
                 counter+=1
-                LabelCmp= Label(FrameJuego, image=imagen, bg='#b97a57',  highlightthickness = 0)
-                LabelCmp.grid(row=i, column=j)
+                comparaciones.append(Label(FrameJuego, image=imagen, bg='#b97a57',  highlightthickness = 0))
+                comparaciones[-1].grid(row=i, column=j)
     for i in range(0,25):
         if   nums[i]==1:
             casillas[i].config(image=imgB1_)
@@ -61,17 +71,90 @@ def cargar(dificultad):
         else:
             casillas[i].config(image=imgB0)
     juego=nums
-    base=open(str('Niveles/'+dificultad+'/'+aleatorio+'_.txt'), 'r', encoding='utf-8')
+    base=open(str('Niveles/'+dificultad+'/'+numNivel+'_.txt'), 'r', encoding='utf-8')
     numlineas=base.readlines()
     base.seek(0)
     for linea in numlineas:
         for i in linea.strip():
-            nivel.append(int(i))
+            nivel[1].append(int(i))
+    return
+
+def jugar():
+    """
+    E/S: None
+    Función: Inicia el juego
+    """
+    ventana.config(bg='brown')
+    EntryNombre.delete(0, 'end')
+    frame.pack_forget()
+    frameNombre.pack()
+    cargar(str(randint(1,3)))
+    return
+
+def volver():
+    """
+    E/S: None
+    Función: Quita la última acción.
+    """
+    global pila
+    global juego
+
+    if len(pila)==0:
+        print('nohay')
+        return
+    else:
+        ultimo=pila.pop(-1)
+    huboCambio=False
+
+    for i in pila:
+        if i[1]==ultimo[1]:
+            juego[i[1]]=ultimo[0]
+            huboCambio=True
+            if i[0]==1:
+                casillas[ultimo[1]].config(image=imgB1)
+            elif i[0]==2:
+                casillas[ultimo[1]].config(image=imgB2)
+            elif i[0]==3:
+                casillas[ultimo[1]].config(image=imgB3) 
+            elif i[0]==4:
+                casillas[ultimo[1]].config(image=imgB4)
+            else:
+                casillas[ultimo[1]].config(image=imgB5)
     
+    if huboCambio==False:
+        juego[ultimo[1]]=0
+        casillas[ultimo[1]].config(image=imgB0)
+    return
+
+def otro():
+    """
+    E/S: None
+    Función: Cambia el nivel a otro de la misma dificultad
+    """
+    if len(nivel)==0:
+        print('dale a jugar antes mi pana')
+    else:
+        numNivel=nivel[0]
+        while numNivel==nivel[0]:
+            numNivel=str(randint(1,3))
+        cargar(numNivel)
+    return
+
+def reiniciar():
+    """
+    E/S: None
+    Función: Reinicia el nivel
+    """
+    if len(nivel)==0:
+        print('dale a jugar antes mi pana')
+    else:
+        cargar(nivel[0])
+    return
+
 def switch(num):
     """
-    Entradas: num (un entero del 1 al 5)
-    Salidas: la global numero
+    E: num (un entero del 1 al 5)
+    S: la global numero
     Función: Cambiar de numero
     """
     global numero
@@ -94,27 +177,34 @@ def switch(num):
     return
 
 def esValido(posicion):
+    """
+    E: posicion
+    S: Bool
+    Función: Pone números rojos
+    """
     global continuar
 
     def stop(e):
         """
-        Entradas: evento
-        Salidas: None
+        E: evento
+        S: None
         Función: Quita la pausa y el numero rojo
         """
         global continuar
         LabelE.destroy()
         continuar=True
+    if len(nivel)==0:
+        return False
     if continuar:
         prueba=[]
         for i in juego:
             prueba.append(i)
         prueba[posicion] = numero
 
-        for i in range(len(nivel)):
+        for i in range(len(nivel[1])):
             if prueba[i]==0:
                 pass
-            elif prueba[i]!=nivel[i] or juego==prueba:
+            elif prueba[i]!=nivel[1][i] or juego==prueba:
                 if numero==1:
                     LabelE= Label(FrameJuego, image=imgB1D, bg='#b97a57',  highlightthickness = 0)
                 elif numero==2:
@@ -135,26 +225,29 @@ def esValido(posicion):
 
 def apuntar(self, posicion):
     """
-    Entradas: Casilla a cambiar, posicion de la casilla.
-    Salidas: None
+    E: Casilla a cambiar, posicion de la casilla.
+    S: None
     Función: Pone el numero en el tablero
              Hará alguna función con el registro de la pila, de momento pass
     """
     def win(e):
         """
-        Entradas: evento
-        Salidas: None
+        E: evento
+        S: None
         Función: Quita la pantalla de victoria
         """
         frame.pack()
         frameVictoria.pack_forget()
-        ventana.config(bg='light gray')
+        ventana.config(bg='#f0f0f0')
         return
     
     global juego
+    global pila
 
     if continuar and esValido(posicion):
         juego[posicion] = numero
+        pila.append((numero, posicion))
+        print(pila)
         if numero==1:
             self.config(image=imgB1)
         elif numero==2:
@@ -165,11 +258,22 @@ def apuntar(self, posicion):
             self.config(image=imgB4)
         else:
             self.config(image=imgB5)
-        if nivel==juego:
+        if nivel[1]==juego:
             frame.pack_forget()
             frameVictoria.pack()
             ventana.config(bg='orange')
             ventana.bind('<Return>', win)
+    return
+
+def iniciar():
+    """
+    E/S: None
+    Función: Pone el numero en el tablero
+    """
+    ventana.config(bg='#f0f0f0')
+    frameNombre.pack_forget()
+    frame.pack()
+    nombre=EntryNombre.get().replace(';','')
     return
 
 #Objetos de ventana
@@ -178,11 +282,12 @@ pantalla_largo=ventana.winfo_screenwidth()//2
 pantalla_alto=ventana.winfo_screenheight()//2
 ventana.geometry( f'{740}x{560}+{(pantalla_largo)-370}+{(pantalla_alto)-280}')
 
-frame = Frame(ventana)
-frameVictoria = Frame(ventana, bg='orange')
-FrameOpciones = Frame(frame)
-FrameNums = Frame(frame)
-FrameJuego = Frame(frame, bg='#b97a57')
+frameNombre     = Frame(ventana, bg='brown')
+frame           = Frame(ventana, bg='#f0f0f0')
+frameVictoria   = Frame(ventana, bg='orange')
+FrameOpciones   = Frame(frame)
+FrameNums       = Frame(frame)
+FrameJuego      = Frame(frame, bg='#b97a57')
 
 #Cambios a ventana
 ventana.title('Futoshiki')
@@ -191,9 +296,10 @@ ventana.title('Futoshiki')
 
 imgTitulo    = ImageTk.PhotoImage(Image.open('images/title.png').resize((448, 152), Image.NONE))
 
+imgListo     = ImageTk.PhotoImage(Image.open('images/listo.png').resize((147, 57), Image.NONE))
 imgJugar     = ImageTk.PhotoImage(Image.open('images/jugar.png').resize((147, 57), Image.NONE))
 imgDeshacer  = ImageTk.PhotoImage(Image.open('images/volver.png').resize((147, 57), Image.NONE))
-imgTerminar  = ImageTk.PhotoImage(Image.open('images/juzgar.png').resize((147, 57), Image.NONE))
+imgTerminar  = ImageTk.PhotoImage(Image.open('images/otro.png').resize((147, 57), Image.NONE))
 imgReiniciar = ImageTk.PhotoImage(Image.open('images/borrar.png').resize((147, 57), Image.NONE))
 imgTop       = ImageTk.PhotoImage(Image.open('images/top.png').resize((147, 57), Image.NONE))
 
@@ -234,15 +340,27 @@ imgB        = ImageTk.PhotoImage(Image.open('images/Bloques/B.png'))
 imgC        = ImageTk.PhotoImage(Image.open('images/Bloques/C.png'))
 imgD        = ImageTk.PhotoImage(Image.open('images/Bloques/D.png'))
 
+#Nombre
+ventana.config()
+
+frame.pack()
+EntryNombre=Entry(frameNombre, width=30, font=('Segoe UI', 16))
+BotNombre=Button(frameNombre, image=imgListo, activebackground='brown',  highlightthickness = 0, bd = 0, command=lambda:iniciar())
+LabelNombre= Label(frameNombre, text='Nombre:', font=('Segoe UI', 20), fg='white', bg='brown', highlightthickness = 0)
+
+LabelNombre.pack(pady=100)
+EntryNombre.pack()
+BotNombre.pack(pady=100)
+
 #Labels
-LblTitulo =  Label(frame, image=imgTitulo, background='light gray')
+LblTitulo =  Label(frame, image=imgTitulo, background='#f0f0f0')
 
 #casillas
-BotJugar = Button(FrameOpciones, image=imgJugar,  highlightthickness = 0, bd = 0, command=lambda:cargar('Facil'))
-BotDeshacer = Button(FrameOpciones, image=imgDeshacer,  highlightthickness = 0, bd = 0)
-BotTerminar = Button(FrameOpciones, image=imgTerminar,  highlightthickness = 0, bd = 0)
-BotReiniciar = Button(FrameOpciones, image=imgReiniciar,  highlightthickness = 0, bd = 0)
-BotTop = Button(FrameOpciones, image=imgTop,  highlightthickness = 0, bd = 0)
+BotJugar    = Button(FrameOpciones, image=imgJugar,     highlightthickness = 0, bd = 0, command=lambda:jugar())
+BotDeshacer = Button(FrameOpciones, image=imgDeshacer,  highlightthickness = 0, bd = 0, command=lambda:volver())
+BotTerminar = Button(FrameOpciones, image=imgTerminar,  highlightthickness = 0, bd = 0, command=lambda:otro())
+BotReiniciar= Button(FrameOpciones, image=imgReiniciar, highlightthickness = 0, bd = 0, command=lambda:reiniciar())
+BotTop      = Button(FrameOpciones, image=imgTop,       highlightthickness = 0, bd = 0)
 
 Bot1 = Button(FrameNums, image=img1_,  highlightthickness = 0, bd = 0, command=lambda:switch(1))
 Bot2 = Button(FrameNums,  image=img2,  highlightthickness = 0, bd = 0, command=lambda:switch(2))
@@ -296,8 +414,8 @@ LabelWin.pack(pady=200)
 for i in range(9):
     for j in range(9):
         if i%2==1 or j%2==1:
-            LabelCmp= Label(FrameJuego, image=imgN, bg='#b97a57',  highlightthickness = 0)
-            LabelCmp.grid(row=i, column=j)
+            comparaciones.append(Label(FrameJuego, image=imgN, bg='#b97a57',  highlightthickness = 0))
+            comparaciones[-1].grid(row=i, column=j)
 
 Bot00.grid(row=0, column=0)
 Bot01.grid(row=0, column=2)
@@ -341,7 +459,6 @@ BotReiniciar.grid(row=0, column=3)
 BotTop.grid(row=0, column=4)
 
 #Empaqutados
-frame.pack()
 
 #Loop
 ventana.mainloop()
