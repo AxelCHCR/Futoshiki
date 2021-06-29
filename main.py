@@ -230,6 +230,8 @@ def esValido(posicion):
             if prueba[i]==0:
                 pass
             elif prueba[i]!=nivel[1][i] or juego==prueba:
+                if juego==prueba:
+                    print('unu')
                 LabelE=Label(frameJuego, bg='#b97a57',  highlightthickness = 0)
                 if numero==1:
                     LabelE.config(image=imgB1D)
@@ -306,6 +308,7 @@ def apuntar(self, posicion):
     global juego
     global pila
     global ganaste
+    print(1)
     if ganaste:
         if nivel[3]=='T' and transcurrido==[0,0,0]:
             messagebox.showerror('¡Tiempo!','Se gastó el tiempo..')
@@ -564,7 +567,7 @@ def configurar():
     BotConfirmar.grid(row=8, column=0, columnspan=3)
 
 def ayuda():
-    startfile('Ayuda.pdf')
+    startfile('manual_de_usuario_futoshiki.pdf')
     return
 
 def acerca():
@@ -594,7 +597,50 @@ def salir():
         except:
             pass
 
+def cargarPartida():
+    global nombre
+    global nivel
+    global pila
+    global transcurrido
+    global dificultad
+    global tiempo
+    global limite
+    global numero
+    global juego
+    if ganaste:
+        save=open('futoshiki2021juegoactual.dat', 'r', encoding='utf-8')
+        lineas=save.readlines()
+        save.seek(0)
+        nombre=lineas[0].replace('\n','')
+        nivel=eval(lineas[1].replace('\n',''))
+        dificultad=nivel[2]
+        tiempo=nivel[3]
+        limite=nivel[4]
+        juego=[]
+        cargar(nivel[0])
+        nivel=eval(lineas[1].replace('\n',''))
+        pilita=eval(lineas[2].replace('\n',''))
+        transcurrido=eval(lineas[3].replace('\n',''))
+        for i in pilita:
+            numero=i[0]
+            apuntar(casillas[i[1]], i[1])
+        numero=1
+        switch(1)
+
 def guardar():
+    if ganaste:
+        return
+    else:
+        save=open('futoshiki2021juegoactual.dat', 'w', encoding='utf-8')
+        save.write(str(nombre))
+        save.write('\n')
+        save.write(str(nivel))
+        save.write('\n')
+        save.write(str(pila))
+        save.write('\n')
+        save.write(str(transcurrido))
+        save.close()
+        messagebox.showinfo('Archivo guardado', 'Tu partida ha sido guardada.')
     return
 #                                                           Objetos de ventana
 ventana = Tk()
@@ -706,8 +752,8 @@ BotDeshacer = Button(frameOpciones, image=imgDeshacer,  highlightthickness = 0, 
 BotTerminar = Button(frameOpciones, image=imgTerminar,  highlightthickness = 0, bd = 0, command=otro)
 BotReiniciar= Button(frameOpciones, image=imgReiniciar, highlightthickness = 0, bd = 0, command=reiniciar)
 BotTop      = Button(frameOpciones, image=imgTop,       highlightthickness = 0, bd = 0, command=top10)
-BotGuardar  = Button(frameOpciones, image=imgGuardar,   highlightthickness = 0, bd = 0)
-BotCargar   = Button(frameOpciones, image=imgCargar,    highlightthickness = 0, bd = 0)
+BotGuardar  = Button(frameOpciones, image=imgGuardar,   highlightthickness = 0, bd = 0, command=guardar)
+BotCargar   = Button(frameOpciones, image=imgCargar,    highlightthickness = 0, bd = 0, command=cargarPartida)
 
 Bot1 = Button(frameNums, image=img1_,  highlightthickness = 0, bd = 0, command=lambda:switch(1))
 Bot2 = Button(frameNums,  image=img2,  highlightthickness = 0, bd = 0, command=lambda:switch(2))
