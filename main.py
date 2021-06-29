@@ -17,6 +17,9 @@ dificultad='Facil'
 pila=[]
 comparaciones=[]
 tiempo='S'
+top=()
+ventanas=[]
+nombre=''
 
 def cargar(numNivel):
     """
@@ -102,7 +105,7 @@ def jugar():
     E/S: None
     Función: Inicia el juego
     """
-    if continuar:
+    if continuar and ganaste:
         ventana.config(bg='brown')
         EntryNombre.delete(0, 'end')
         frame.pack_forget()
@@ -263,34 +266,113 @@ def apuntar(self, posicion):
         frameVictoria.pack_forget()
         ventana.config(bg='#f0f0f0')
         return
-    
+
+    def record(rankig, nuevo):
+        print(nivel[2])
+        print(nuevo)
+        if nivel[2]=='Facil':
+            categoria=0
+        elif nivel[2]=='Normal':
+            categoria=1
+        else:
+            categoria=2
+        for i in range(len(rankig[categoria])):
+            t=rankig[categoria][i][1].split(':')
+            print(rankig[categoria][i])
+            if rankig[categoria][i]==('',''):
+                print('Bruh')
+                rankig[categoria].insert(i,(str(nombre), str(str(nuevo[0])+':'+str(nuevo[1])+':'+str(nuevo[2]))))
+                rankig[categoria].pop()
+                return rankig
+            if nuevo[0]==int(t[0]):
+                print('hora')
+                if nuevo[1]==int(t[1]):
+                    print('min')
+                    if nuevo[2]<int(t[2]):
+                        print('seg')
+                        rankig[categoria].insert(i,(str(nombre), str(str(nuevo[0])+':'+str(nuevo[1])+':'+str(nuevo[2]))))
+                        rankig[categoria].pop()
+                        return rankig
+                elif nuevo[1]<int(t[1]):
+                    rankig[categoria].insert(i,(str(nombre), str(str(nuevo[0])+':'+str(nuevo[1])+':'+str(nuevo[2]))))
+                    rankig[categoria].pop()
+                    return rankig
+            elif nuevo[0]<int(t[0]):
+                rankig[categoria].insert(i,(str(nombre), str(str(nuevo[0])+':'+str(nuevo[1])+':'+str(nuevo[2]))))
+                rankig[categoria].pop()
+                return rankig
+        return rankig
+
     global juego
     global pila
     global ganaste
+    if ganaste:
+        if nivel[3]=='T' and transcurrido==[0,0,0]:
+            messagebox.showerror('¡Tiempo!','Se gastó el tiempo..')
+        return
+    else:
+        if continuar and esValido(posicion):
+            juego[posicion] = numero
+            pila.append((numero, posicion))
+            if numero==1:
+                self.config(image=imgB1)
+            elif numero==2:
+                self.config(image=imgB2)
+            elif numero==3:
+                self.config(image=imgB3) 
+            elif numero==4:
+                self.config(image=imgB4)
+            else:
+                self.config(image=imgB5)
+            if nivel[1]==juego:
+                ganaste=True
+                frame.pack_forget()
+                frameVictoria.pack()
+                ventana.config(bg='orange')
+                nota=[]
+                if nivel[3]=='T':
+                    nota=[nivel[4][0]-transcurrido[0], nivel[4][1]-transcurrido[1], nivel[4][2]-transcurrido[2]]
+                else:
+                    nota=[transcurrido[0], transcurrido[1], transcurrido[2]]
+                LabelTiempo.config(text=str(nota[0])+':'+str(nota[1])+':'+str(nota[2]))
 
-    if continuar and esValido(posicion):
-        juego[posicion] = numero
-        pila.append((numero, posicion))
-        print(pila)
-        if numero==1:
-            self.config(image=imgB1)
-        elif numero==2:
-            self.config(image=imgB2)
-        elif numero==3:
-            self.config(image=imgB3) 
-        elif numero==4:
-            self.config(image=imgB4)
-        else:
-            self.config(image=imgB5)
-        if nivel[1]==juego:
-            ganaste=True
-            frame.pack_forget()
-            frameVictoria.pack()
-            ventana.config(bg='orange')
-            LabelTiempo= Label(frameVictoria, text=str(transcurrido[0])+':'+str(transcurrido[1])+':'+str(transcurrido[2]),
-                        font=('Segoe UI', 40), fg='yellow', bg='orange',  highlightthickness = 0)
-            LabelTiempo.pack()
-            ventana.bind('<Return>', win)
+                ListaTop=open('futoshiki2021top10.dat', 'r', encoding='utf-8')
+                numlineas=ListaTop.readlines()
+                ListaTop.seek(0)
+                lineas=[]
+                top=[]
+                for linea in numlineas:
+                    if linea!='D:\n':
+                        if ';' in linea:
+                            lineas.append((linea.split(';')[0], linea.split(';')[1].replace('\n', '')))
+                        else:
+                            lineas.append(('',''))
+                    else:
+                        if len(lineas)!=0:
+                            top.append(lineas)
+                            lineas=[]
+                top.append(lineas)
+                print(top)
+                record(top, nota)
+                print(top)
+                ListaTop=open('futoshiki2021top10.dat', 'w', encoding='utf-8')
+                i=-1
+                j=10
+                for linea in range(33):
+                    print(i, j)
+                    if j==10:
+                        if i==-1:
+                            ListaTop.write('D:')
+                        else:
+                            ListaTop.write('\nD:')
+                        i+=1
+                        j=0
+                    else:
+                        ListaTop.write(str('\n'+top[i][j][0]+';'+top[i][j][1]))
+                        j+=1
+                ListaTop.close()
+                LabelTiempo.pack()
+                ventana.bind('<Return>', win)
     return
 
 def iniciar():
@@ -299,6 +381,8 @@ def iniciar():
     Función: Pone el numero en el tablero
     """
     global transcurrido
+    global nombre
+    nombre=str(EntryNombre.get())
     ventana.config(bg='#f0f0f0')
     frameNombre.pack_forget()
     frame.pack()
@@ -319,11 +403,11 @@ def cronometro():
     """
     global transcurrido
     global continuar
+    global ganaste
     seg=transcurrido[2]
     minut=transcurrido[1]
     hora=transcurrido[0]
     if continuar and ganaste==False:
-        print(nivel[3])
         if nivel[3]=='T':
             if hora+minut+seg>0:
                 seg-=1
@@ -335,6 +419,8 @@ def cronometro():
                             if hora>0:
                                 minut=59
                                 hora-=1
+            else:
+                ganaste=True
         else:
             seg+=1
             if seg==60:
@@ -354,7 +440,37 @@ def cronometro():
     return
 
 def top10():
-
+    def seguir():
+        frame.pack()
+        frameTop.pack_forget()
+        ventana.config(bg='#f0f0f0')
+    global top
+    ventana.config(bg='yellow')
+    frame.pack_forget()
+    frameTop.pack()
+    ListaTop=open('futoshiki2021top10.dat', 'r', encoding='utf-8')
+    numlineas=ListaTop.readlines()
+    ListaTop.seek(0)
+    lineas=[]
+    for linea in numlineas:
+        if linea!='D:\n':
+            if ';' in linea:
+                lineas.append((linea.split(';')[0], linea.split(';')[1].replace('\n', '')))
+            else:
+                lineas.append(('',''))
+    top=tuple(lineas)
+    print(len(top))
+    buffer=1
+    for i in top:
+        if buffer in [11,22]:
+            buffer+=1
+        LabelTn= Label(frameTop, text=i[0], font=('Segoe UI', 10), bg='yellow', highlightthickness = 0)
+        LabelTt= Label(frameTop, text=i[1],font=('Segoe UI', 10), bg='yellow', highlightthickness = 0)
+        LabelTn.grid(row=buffer, column=1, sticky=S)
+        LabelTt.grid(row=buffer, column=2, sticky=S)
+        buffer+=1
+    BotSeguir=Button(frameTop, text='Seguir', command=seguir)
+    BotSeguir.grid(row=buffer+1, column=0, columnspan=3, sticky=S)
     return
 
 def configurar():
@@ -392,6 +508,7 @@ def configurar():
         return
     global imgListo
     vConfigurar = Tk()
+    ventanas.append(vConfigurar)
     vConfigurar.title('Configurar')
     frameTiempo = Frame(vConfigurar, bg='light yellow')
 
@@ -452,6 +569,7 @@ def ayuda():
 
 def acerca():
     vAcerca = Tk()
+    ventanas.append(vAcerca)
     vAcerca.title('Acerca de...')
     LabelA=Label(vAcerca, text='Futoshiki')
     LabelA.grid(row=0, column=0, columnspan=2)
@@ -469,14 +587,25 @@ def acerca():
     LabelA.grid(row=3, column=1)
     vAcerca.mainloop()
 
+def salir():
+    for i in ventanas:
+        try:
+            i.destroy()
+        except:
+            pass
+
+def guardar():
+    return
 #                                                           Objetos de ventana
 ventana = Tk()
+ventanas.append(ventana)
 pantalla_largo=ventana.winfo_screenwidth()//2
 pantalla_alto=ventana.winfo_screenheight()//2
-ventana.geometry( f'{900}x{780}+{(pantalla_largo)-450}+{(pantalla_alto)-390}')
+ventana.geometry( f'{900}x{900}+{(pantalla_largo)-450}+{(pantalla_alto)-440}')
 
 frameNombre     = Frame(ventana, bg='brown')
 frame           = Frame(ventana, bg='#f0f0f0')
+frameTop        = Frame(ventana, bg='yellow')
 frameVictoria   = Frame(ventana, bg='orange')
 frameOpciones   = Frame(frame)
 frameNums       = Frame(frame)
@@ -541,7 +670,7 @@ ventana.config(menu=menus)
 mnuArchivo=Menu(menus, tearoff=0)
 mnuArchivo.add_command(label="Configurar", command=configurar)
 mnuArchivo.add_separator()
-mnuArchivo.add_command(label="Salir", command=ventana.quit)
+mnuArchivo.add_command(label="Salir", command=salir)
 
 mnuAyuda=Menu(menus, tearoff=0)
 mnuAyuda.add_command(label="Ayuda", command=ayuda)
@@ -549,24 +678,34 @@ mnuAyuda.add_command(label="Acerca de...", command=acerca)
 
 menus.add_cascade(label="Archivo", menu=mnuArchivo)
 menus.add_cascade(label="Ayuda", menu=mnuAyuda)
-#
-
+#                                                           Otros frames
 EntryNombre=Entry(frameNombre, width=30, font=('Segoe UI', 20))
 BotNombre=Button(frameNombre, image=imgListo, activebackground='brown',  highlightthickness = 0, bd = 0, command=lambda:iniciar())
 LabelNombre= Label(frameNombre, text='Nombre:',font=('Segoe UI', 20), fg='white', bg='brown', highlightthickness = 0)
-
 LabelNombre.pack(pady=100)
 EntryNombre.pack()
 BotNombre.pack(pady=100)
 
+LabelTopD= Label(frameTop, text='Fácil:',font=('Segoe UI', 12), bg='yellow', highlightthickness = 0)
+LabelTopN= Label(frameTop, text='Normal:',font=('Segoe UI', 12), bg='yellow', highlightthickness = 0)
+LabelTopF= Label(frameTop, text='Difícil:',font=('Segoe UI', 12), bg='yellow', highlightthickness = 0)
+LabelTopD.grid(row=0, column=0, sticky=W)
+LabelTopN.grid(row=11, column=0, sticky=W)
+LabelTopF.grid(row=22, column=0, sticky=W)
+for fila in [0, 11, 22]:
+    LabelTopJ= Label(frameTop, text='Jugador',font=('Segoe UI', 12), bg='yellow', highlightthickness = 0)
+    LabelTopT= Label(frameTop, text='Tiempo',font=('Segoe UI', 12), bg='yellow', highlightthickness = 0)
+    LabelTopJ.grid(row=fila, column=1)
+    LabelTopT.grid(row=fila, column=2)
+
 #                                                           Objetos de la ventana
 LblTitulo =  Label(frame, image=imgTitulo, background='#f0f0f0')
 
-BotJugar    = Button(frameOpciones, image=imgJugar,     highlightthickness = 0, bd = 0, command=lambda:jugar())
-BotDeshacer = Button(frameOpciones, image=imgDeshacer,  highlightthickness = 0, bd = 0, command=lambda:volver())
-BotTerminar = Button(frameOpciones, image=imgTerminar,  highlightthickness = 0, bd = 0, command=lambda:otro())
-BotReiniciar= Button(frameOpciones, image=imgReiniciar, highlightthickness = 0, bd = 0, command=lambda:reiniciar())
-BotTop      = Button(frameOpciones, image=imgTop,       highlightthickness = 0, bd = 0)
+BotJugar    = Button(frameOpciones, image=imgJugar,     highlightthickness = 0, bd = 0, command=jugar)
+BotDeshacer = Button(frameOpciones, image=imgDeshacer,  highlightthickness = 0, bd = 0, command=volver)
+BotTerminar = Button(frameOpciones, image=imgTerminar,  highlightthickness = 0, bd = 0, command=otro)
+BotReiniciar= Button(frameOpciones, image=imgReiniciar, highlightthickness = 0, bd = 0, command=reiniciar)
+BotTop      = Button(frameOpciones, image=imgTop,       highlightthickness = 0, bd = 0, command=top10)
 BotGuardar  = Button(frameOpciones, image=imgGuardar,   highlightthickness = 0, bd = 0)
 BotCargar   = Button(frameOpciones, image=imgCargar,    highlightthickness = 0, bd = 0)
 
@@ -624,6 +763,7 @@ BotCargar.grid(row=3, column=3, columnspan=2, padx=10, pady=30)
 
 LabelWin= Label(frameVictoria, text='¡EXCELENTE!', font=('Segoe UI', 80), fg='yellow', bg='orange',  highlightthickness = 0)
 LabelWin.pack(pady=200)
+LabelTiempo= Label(frameVictoria,font=('Segoe UI', 40), fg='yellow', bg='orange',  highlightthickness = 0)
 
 horas = Label(frameReloj,   text='0',       font=('Segoe UI', 12), bg='light yellow',  highlightthickness = 0)
 minutos = Label(frameReloj, text='0',       font=('Segoe UI', 12), bg='light yellow',  highlightthickness = 0)
