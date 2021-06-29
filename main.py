@@ -20,6 +20,7 @@ tiempo='S'
 top=()
 ventanas=[]
 nombre=''
+cmps=[]
 
 def cargar(numNivel):
     """
@@ -33,6 +34,7 @@ def cargar(numNivel):
     global comparaciones
     global pila
     global ganaste
+    global cmps
 
     ganaste=False
     nivel=[numNivel, [], dificultad, tiempo, limite]
@@ -98,6 +100,7 @@ def cargar(numNivel):
         segundos.config(text=str(0))
     minutos.config(text=str(transcurrido[1]))
     horas.config(text=str(transcurrido[0]))
+    print(cmps)
     return
 
 def jugar():
@@ -154,9 +157,7 @@ def otro():
     Función: Cambia el nivel a otro de la misma dificultad
     """
     if continuar:
-        if len(nivel)==0:
-            print('dale a jugar antes mi pana')
-        else:
+        if len(nivel)!=0:
             numNivel=nivel[0]
             while numNivel==nivel[0]:
                 numNivel=str(randint(1,3))
@@ -169,9 +170,7 @@ def reiniciar():
     Función: Reinicia el nivel
     """
     if continuar:
-        if len(nivel)==0:
-            print('dale a jugar antes mi pana')
-        else:
+        if len(nivel)!=0:
             cargar(nivel[0])
     return
 
@@ -231,7 +230,27 @@ def esValido(posicion):
                 pass
             elif prueba[i]!=nivel[1][i] or juego==prueba:
                 if juego==prueba:
-                    print('unu')
+                    messagebox.showerror('Número ya correcto', 'Pusiste un numero que ya estaba correcto encima de otro.')
+                    error=True
+                else:
+                    error=False
+                    for i in range(5):
+                        buffer=[]
+                        for j in range(5):
+                            buffer.append(prueba[i*5+j])
+                        print(buffer)
+                        for k in buffer:
+                            if k!=0 and buffer.count(k)>1 and error==False:
+                                messagebox.showerror('Número en fila', 'Ya había un número en la fila')
+                                error=True
+                        for j in range(5):
+                            buffer.append(prueba[j*5+i])
+                        print(buffer)
+                        for k in buffer:
+                            if k!=0 and buffer.count(k)>1 and error==False:
+                                messagebox.showerror('Número en columna', 'Ya había un número en la columna')
+                                error=True
+
                 LabelE=Label(frameJuego, bg='#b97a57',  highlightthickness = 0)
                 if numero==1:
                     LabelE.config(image=imgB1D)
@@ -642,6 +661,11 @@ def guardar():
         save.close()
         messagebox.showinfo('Archivo guardado', 'Tu partida ha sido guardada.')
     return
+
+def limitador(ent):
+    if len(ent.get()) > 0:
+        #donde esta el :5 limitas la cantidad d caracteres
+        ent.set(ent.get()[:20])
 #                                                           Objetos de ventana
 ventana = Tk()
 ventanas.append(ventana)
@@ -725,7 +749,9 @@ mnuAyuda.add_command(label="Acerca de...", command=acerca)
 menus.add_cascade(label="Archivo", menu=mnuArchivo)
 menus.add_cascade(label="Ayuda", menu=mnuAyuda)
 #                                                           Otros frames
-EntryNombre=Entry(frameNombre, width=30, font=('Segoe UI', 20))
+nombrecillo = StringVar()
+EntryNombre=Entry(frameNombre, width=30, font=('Segoe UI', 20), textvariable = nombrecillo)
+nombrecillo.trace("w", lambda *args: limitador(nombrecillo))
 BotNombre=Button(frameNombre, image=imgListo, activebackground='brown',  highlightthickness = 0, bd = 0, command=lambda:iniciar())
 LabelNombre= Label(frameNombre, text='Nombre:',font=('Segoe UI', 20), fg='white', bg='brown', highlightthickness = 0)
 LabelNombre.pack(pady=100)
