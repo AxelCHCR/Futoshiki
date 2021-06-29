@@ -1,15 +1,22 @@
 #Librerías
 from tkinter import *
+from tkinter import ttk
+from tkinter import messagebox
 from PIL import ImageTk, Image
 from random import randint
+from os import startfile
 
+transcurrido=[0,0,0]
+limite=[2,0,0]
+ganaste=True
 numero=1
 nivel=[]
-juego=[0 for i in range(0,25)]
+juego=[]
 continuar=True
 dificultad='Facil'
 pila=[]
 comparaciones=[]
+tiempo='S'
 
 def cargar(numNivel):
     """
@@ -17,12 +24,15 @@ def cargar(numNivel):
     S: None
     Función: Inicia el juego
     """
+    global transcurrido
     global nivel
     global juego
     global comparaciones
     global pila
+    global ganaste
 
-    nivel=[numNivel, []]
+    ganaste=False
+    nivel=[numNivel, [], dificultad, tiempo, limite]
     juego=[]
     pila=[]
 
@@ -55,7 +65,7 @@ def cargar(numNivel):
                 else:
                     imagen=imgD
                 counter+=1
-                comparaciones.append(Label(FrameJuego, image=imagen, bg='#b97a57',  highlightthickness = 0))
+                comparaciones.append(Label(frameJuego, image=imagen, bg='#b97a57',  highlightthickness = 0))
                 comparaciones[-1].grid(row=i, column=j)
     for i in range(0,25):
         if   nums[i]==1:
@@ -77,6 +87,14 @@ def cargar(numNivel):
     for linea in numlineas:
         for i in linea.strip():
             nivel[1].append(int(i))
+    if nivel[3]=='T':
+        transcurrido=[limite[0], limite[1], limite[2]]
+        segundos.config(text=str(transcurrido[2]))
+    else:
+        transcurrido=[0,0,-1]
+        segundos.config(text=str(0))
+    minutos.config(text=str(transcurrido[1]))
+    horas.config(text=str(transcurrido[0]))
     return
 
 def jugar():
@@ -84,11 +102,12 @@ def jugar():
     E/S: None
     Función: Inicia el juego
     """
-    ventana.config(bg='brown')
-    EntryNombre.delete(0, 'end')
-    frame.pack_forget()
-    frameNombre.pack()
-    cargar(str(randint(1,3)))
+    if continuar:
+        ventana.config(bg='brown')
+        EntryNombre.delete(0, 'end')
+        frame.pack_forget()
+        frameNombre.pack()
+        cargar(str(randint(1,3)))
     return
 
 def volver():
@@ -98,32 +117,32 @@ def volver():
     """
     global pila
     global juego
+    if continuar:
+        if len(pila)==0:
+            print('nohay')
+            return
+        else:
+            ultimo=pila.pop(-1)
+        huboCambio=False
 
-    if len(pila)==0:
-        print('nohay')
-        return
-    else:
-        ultimo=pila.pop(-1)
-    huboCambio=False
-
-    for i in pila:
-        if i[1]==ultimo[1]:
-            juego[i[1]]=ultimo[0]
-            huboCambio=True
-            if i[0]==1:
-                casillas[ultimo[1]].config(image=imgB1)
-            elif i[0]==2:
-                casillas[ultimo[1]].config(image=imgB2)
-            elif i[0]==3:
-                casillas[ultimo[1]].config(image=imgB3) 
-            elif i[0]==4:
-                casillas[ultimo[1]].config(image=imgB4)
-            else:
-                casillas[ultimo[1]].config(image=imgB5)
-    
-    if huboCambio==False:
-        juego[ultimo[1]]=0
-        casillas[ultimo[1]].config(image=imgB0)
+        for i in pila:
+            if i[1]==ultimo[1]:
+                juego[i[1]]=ultimo[0]
+                huboCambio=True
+                if i[0]==1:
+                    casillas[ultimo[1]].config(image=imgB1)
+                elif i[0]==2:
+                    casillas[ultimo[1]].config(image=imgB2)
+                elif i[0]==3:
+                    casillas[ultimo[1]].config(image=imgB3) 
+                elif i[0]==4:
+                    casillas[ultimo[1]].config(image=imgB4)
+                else:
+                    casillas[ultimo[1]].config(image=imgB5)
+        
+        if huboCambio==False:
+            juego[ultimo[1]]=0
+            casillas[ultimo[1]].config(image=imgB0)
     return
 
 def otro():
@@ -131,13 +150,14 @@ def otro():
     E/S: None
     Función: Cambia el nivel a otro de la misma dificultad
     """
-    if len(nivel)==0:
-        print('dale a jugar antes mi pana')
-    else:
-        numNivel=nivel[0]
-        while numNivel==nivel[0]:
-            numNivel=str(randint(1,3))
-        cargar(numNivel)
+    if continuar:
+        if len(nivel)==0:
+            print('dale a jugar antes mi pana')
+        else:
+            numNivel=nivel[0]
+            while numNivel==nivel[0]:
+                numNivel=str(randint(1,3))
+            cargar(numNivel)
     return
 
 def reiniciar():
@@ -145,10 +165,11 @@ def reiniciar():
     E/S: None
     Función: Reinicia el nivel
     """
-    if len(nivel)==0:
-        print('dale a jugar antes mi pana')
-    else:
-        cargar(nivel[0])
+    if continuar:
+        if len(nivel)==0:
+            print('dale a jugar antes mi pana')
+        else:
+            cargar(nivel[0])
     return
 
 def switch(num):
@@ -158,22 +179,23 @@ def switch(num):
     Función: Cambiar de numero
     """
     global numero
-    numero=num
-    Bot1.config(image=img1)
-    Bot2.config(image=img2)
-    Bot3.config(image=img3)
-    Bot4.config(image=img4)
-    Bot5.config(image=img5)
-    if num==1:
-        Bot1.config(image=img1_)
-    elif num==2:
-        Bot2.config(image=img2_)
-    elif num==3:
-        Bot3.config(image=img3_)
-    elif num==4:
-        Bot4.config(image=img4_)
-    else:
-        Bot5.config(image=img5_)    
+    if continuar:
+        numero=num
+        Bot1.config(image=img1)
+        Bot2.config(image=img2)
+        Bot3.config(image=img3)
+        Bot4.config(image=img4)
+        Bot5.config(image=img5)
+        if num==1:
+            Bot1.config(image=img1_)
+        elif num==2:
+            Bot2.config(image=img2_)
+        elif num==3:
+            Bot3.config(image=img3_)
+        elif num==4:
+            Bot4.config(image=img4_)
+        else:
+            Bot5.config(image=img5_)
     return
 
 def esValido(posicion):
@@ -205,16 +227,17 @@ def esValido(posicion):
             if prueba[i]==0:
                 pass
             elif prueba[i]!=nivel[1][i] or juego==prueba:
+                LabelE=Label(frameJuego, bg='#b97a57',  highlightthickness = 0)
                 if numero==1:
-                    LabelE= Label(FrameJuego, image=imgB1D, bg='#b97a57',  highlightthickness = 0)
+                    LabelE.config(image=imgB1D)
                 elif numero==2:
-                    LabelE= Label(FrameJuego, image=imgB2D, bg='#b97a57',  highlightthickness = 0)
+                    LabelE.config(image=imgB2D)
                 elif numero==3:
-                    LabelE= Label(FrameJuego, image=imgB3D, bg='#b97a57',  highlightthickness = 0)  
+                    LabelE.config(image=imgB3D)  
                 elif numero==4:
-                    LabelE= Label(FrameJuego, image=imgB4D, bg='#b97a57',  highlightthickness = 0)
+                    LabelE.config(image=imgB4D)
                 else:
-                    LabelE= Label(FrameJuego, image=imgB5D, bg='#b97a57',  highlightthickness = 0)
+                    LabelE.config(image=imgB5D)
                 LabelE.grid(row=(posicion//5)*2, column=(posicion%5)*2)
                 ventana.bind('<Return>', stop)
                 continuar=False
@@ -243,6 +266,7 @@ def apuntar(self, posicion):
     
     global juego
     global pila
+    global ganaste
 
     if continuar and esValido(posicion):
         juego[posicion] = numero
@@ -259,9 +283,13 @@ def apuntar(self, posicion):
         else:
             self.config(image=imgB5)
         if nivel[1]==juego:
+            ganaste=True
             frame.pack_forget()
             frameVictoria.pack()
             ventana.config(bg='orange')
+            LabelTiempo= Label(frameVictoria, text=str(transcurrido[0])+':'+str(transcurrido[1])+':'+str(transcurrido[2]),
+                        font=('Segoe UI', 40), fg='yellow', bg='orange',  highlightthickness = 0)
+            LabelTiempo.pack()
             ventana.bind('<Return>', win)
     return
 
@@ -270,30 +298,194 @@ def iniciar():
     E/S: None
     Función: Pone el numero en el tablero
     """
+    global transcurrido
     ventana.config(bg='#f0f0f0')
     frameNombre.pack_forget()
     frame.pack()
-    nombre=EntryNombre.get().replace(';','')
+    if tiempo=='T':
+        transcurrido=[limite[0], limite[1], limite[2]]
+        segundos.config(text=str(transcurrido[2]))
+    else:
+        transcurrido=[0,0,-1]
+    minutos.config(text=str(transcurrido[1]))
+    horas.config(text=str(transcurrido[0]))
+    
     return
 
-#Objetos de ventana
+def cronometro():
+    """
+    E/S: None
+    Función: Mueve el reloj del juego.
+    """
+    global transcurrido
+    global continuar
+    seg=transcurrido[2]
+    minut=transcurrido[1]
+    hora=transcurrido[0]
+    if continuar and ganaste==False:
+        print(nivel[3])
+        if nivel[3]=='T':
+            if hora+minut+seg>0:
+                seg-=1
+                if seg==-1:
+                    if hora+minut>0:
+                        seg=59
+                        minut-=1
+                        if minut==-1:
+                            if hora>0:
+                                minut=59
+                                hora-=1
+        else:
+            seg+=1
+            if seg==60:
+                seg=0
+                minut+=1
+            if minut==60:
+                minut=0
+                hora+=1
+            
+        segundos.config(text=str(seg))
+        minutos.config(text=str(minut))
+        horas.config(text=str(hora))
+    transcurrido[2]=seg
+    transcurrido[1]=minut
+    transcurrido[0]=hora
+    frameReloj.after(1000, cronometro)
+    return
+
+def top10():
+
+    return
+
+def configurar():
+    def cambioDif(d):
+        global dificultad
+        dificultad=d
+    def cambioReloj(r):
+        global tiempo
+        global limite
+        tiempo=r
+        if tiempo=='S':
+            radSi.select()
+            frameReloj.grid_forget()
+            frameReloj.grid(row=3, column=0, columnspan=2, padx=20, pady=30)
+        elif tiempo=='N':
+            radNo.select()
+            frameReloj.grid_forget()
+        else:
+            radT.select()
+            frameReloj.grid_forget()
+            frameReloj.grid(row=3, column=0, columnspan=2, padx=20, pady=30)
+            print(int(cmbHoras.get()))
+            limite=[int(cmbHoras.get()), int(cmbMinutos.get()), int(cmbSegundos.get())]
+        return
+    def cambioPanel(esDerecha):
+        frameNums.grid_forget()
+        if esDerecha:
+            frameNums.grid(row=1, column=5)
+        else:
+            frameNums.grid(row=1, column=0)
+        return
+    def confirmar():
+        cambioReloj(tiempo)
+        vConfigurar.destroy()
+        return
+    global imgListo
+    vConfigurar = Tk()
+    vConfigurar.title('Configurar')
+    frameTiempo = Frame(vConfigurar, bg='light yellow')
+
+    LabelC=Label(vConfigurar, text='Dificultad')
+    LabelC.grid(row=0, column=0, pady=(20,0))
+    seleccionD=IntVar()
+    radFacil=Radiobutton(vConfigurar, text='Fácil', variable=seleccionD, value=1, command=lambda:cambioDif('Facil'))
+    radFacil.grid(row=0, column=1, pady=(20,0), sticky=W)
+    radNormal=Radiobutton(vConfigurar, text='Normal', variable=seleccionD, value=2, command=lambda:cambioDif('Normal'))
+    radNormal.grid(row=1, column=1, sticky=W)
+    radDificil=Radiobutton(vConfigurar, text='Difícil', variable=seleccionD, value=3, command=lambda:cambioDif('Dificil'))
+    radDificil.grid(row=2, column=1, sticky=W)
+    radFacil.select()
+
+    LabelC=Label(vConfigurar, text='Reloj')
+    LabelC.grid(row=3, column=0, pady=(20,0))
+    seleccionR=StringVar()
+    radSi=Radiobutton(vConfigurar, text='Sí', variable=seleccionR, value='S', command=lambda:cambioReloj('S'))
+    radSi.grid(row=3, column=1, pady=(20,0), sticky=W)
+    radNo=Radiobutton(vConfigurar, text='No', variable=seleccionR, value='N', command=lambda:cambioReloj('N'))
+    radNo.grid(row=4, column=1, sticky=W)
+    radT=Radiobutton(vConfigurar, text='Timer', variable=seleccionR, value='T', command=lambda:cambioReloj('T'))
+    radT.grid(row=5, column=1, sticky=W)
+    radSi.select()
+
+    frameTiempo.grid(row=3, column=2, rowspan=3, padx=20, pady=(20,0))
+    Label(frameTiempo,           text='Horas',   font=('Segoe UI', 8), bg='light yellow',  highlightthickness = 0).grid(row=0, column=0)
+    Label(frameTiempo,           text='Minutos', font=('Segoe UI', 8), bg='light yellow',  highlightthickness = 0).grid(row=0, column=1, padx=20, pady=10)
+    Label(frameTiempo,           text='Segundos',font=('Segoe UI', 8), bg='light yellow',  highlightthickness = 0).grid(row=0, column=2)
+    sesenta=[i for i in range(60)]
+    tres=[i for i in range(3)]
+    
+    cmbHoras= ttk.Combobox(frameTiempo, value=tres)
+    cmbHoras.current(0)
+    cmbHoras.grid(row=1, column=0)
+    cmbMinutos= ttk.Combobox(frameTiempo, value=sesenta)
+    cmbMinutos.current(0)
+    cmbMinutos.grid(row=1, column=1)
+    cmbSegundos= ttk.Combobox(frameTiempo, value=sesenta)
+    cmbSegundos.current(0)
+    cmbSegundos.grid(row=1, column=2)
+
+    LabelC=Label(vConfigurar, text='Panel de digitos')
+    LabelC.grid(row=6, column=0, pady=(20,0))
+    seleccionP=IntVar()
+    radD=Radiobutton(vConfigurar, text='Derecha', variable=seleccionP, value=1, command=lambda:cambioPanel(True))
+    radD.grid(row=6, column=1, pady=(20,0), sticky=W)
+    radI=Radiobutton(vConfigurar, text='Izquierda', variable=seleccionP, value=2, command=lambda:cambioPanel(False))
+    radI.grid(row=7, column=1, sticky=W)
+    radD.select()
+
+    BotConfirmar = Button(vConfigurar, text='Listo', command=confirmar)
+    BotConfirmar.grid(row=8, column=0, columnspan=3)
+
+def ayuda():
+    startfile('Ayuda.pdf')
+    return
+
+def acerca():
+    vAcerca = Tk()
+    vAcerca.title('Acerca de...')
+    LabelA=Label(vAcerca, text='Futoshiki')
+    LabelA.grid(row=0, column=0, columnspan=2)
+    LabelA=Label(vAcerca, text='Versión: ')
+    LabelA.grid(row=1, column=0)
+    LabelA=Label(vAcerca, text='1.0')
+    LabelA.grid(row=1, column=1)
+    LabelA=Label(vAcerca, text='Fecha:')
+    LabelA.grid(row=2, column=0)
+    LabelA=Label(vAcerca, text='6/11/21')
+    LabelA.grid(row=2, column=1)
+    LabelA=Label(vAcerca, text='Autor:')
+    LabelA.grid(row=3, column=0)
+    LabelA=Label(vAcerca, text='Axel Alexander Chaves Reyes')
+    LabelA.grid(row=3, column=1)
+    vAcerca.mainloop()
+
+#                                                           Objetos de ventana
 ventana = Tk()
 pantalla_largo=ventana.winfo_screenwidth()//2
 pantalla_alto=ventana.winfo_screenheight()//2
-ventana.geometry( f'{740}x{560}+{(pantalla_largo)-370}+{(pantalla_alto)-280}')
+ventana.geometry( f'{900}x{780}+{(pantalla_largo)-450}+{(pantalla_alto)-390}')
 
 frameNombre     = Frame(ventana, bg='brown')
 frame           = Frame(ventana, bg='#f0f0f0')
 frameVictoria   = Frame(ventana, bg='orange')
-FrameOpciones   = Frame(frame)
-FrameNums       = Frame(frame)
-FrameJuego      = Frame(frame, bg='#b97a57')
+frameOpciones   = Frame(frame)
+frameNums       = Frame(frame)
+frameJuego      = Frame(frame, bg='#b97a57')
+frameReloj      = Frame(frameOpciones, bg='light yellow')
 
-#Cambios a ventana
 ventana.title('Futoshiki')
 
-#Imágenes
-
+#                                                           Imágenes
 imgTitulo    = ImageTk.PhotoImage(Image.open('images/title.png').resize((448, 152), Image.NONE))
 
 imgListo     = ImageTk.PhotoImage(Image.open('images/listo.png').resize((147, 57), Image.NONE))
@@ -302,6 +494,8 @@ imgDeshacer  = ImageTk.PhotoImage(Image.open('images/volver.png').resize((147, 5
 imgTerminar  = ImageTk.PhotoImage(Image.open('images/otro.png').resize((147, 57), Image.NONE))
 imgReiniciar = ImageTk.PhotoImage(Image.open('images/borrar.png').resize((147, 57), Image.NONE))
 imgTop       = ImageTk.PhotoImage(Image.open('images/top.png').resize((147, 57), Image.NONE))
+imgGuardar   = ImageTk.PhotoImage(Image.open('images/guardar.png').resize((147, 57), Image.NONE))   
+imgCargar    = ImageTk.PhotoImage(Image.open('images/cargar.png').resize((147, 57), Image.NONE))
 
 img1         = ImageTk.PhotoImage(Image.open('images/Numeros/1.png').resize((50, 50), Image.NONE))
 img2         = ImageTk.PhotoImage(Image.open('images/Numeros/2.png').resize((50, 50), Image.NONE))
@@ -340,59 +534,73 @@ imgB        = ImageTk.PhotoImage(Image.open('images/Bloques/B.png'))
 imgC        = ImageTk.PhotoImage(Image.open('images/Bloques/C.png'))
 imgD        = ImageTk.PhotoImage(Image.open('images/Bloques/D.png'))
 
-#Nombre
-ventana.config()
+#                                                           Barra
+menus=Menu(ventana)
+ventana.config(menu=menus)
 
-frame.pack()
-EntryNombre=Entry(frameNombre, width=30, font=('Segoe UI', 16))
+mnuArchivo=Menu(menus, tearoff=0)
+mnuArchivo.add_command(label="Configurar", command=configurar)
+mnuArchivo.add_separator()
+mnuArchivo.add_command(label="Salir", command=ventana.quit)
+
+mnuAyuda=Menu(menus, tearoff=0)
+mnuAyuda.add_command(label="Ayuda", command=ayuda)
+mnuAyuda.add_command(label="Acerca de...", command=acerca)
+
+menus.add_cascade(label="Archivo", menu=mnuArchivo)
+menus.add_cascade(label="Ayuda", menu=mnuAyuda)
+#
+
+EntryNombre=Entry(frameNombre, width=30, font=('Segoe UI', 20))
 BotNombre=Button(frameNombre, image=imgListo, activebackground='brown',  highlightthickness = 0, bd = 0, command=lambda:iniciar())
-LabelNombre= Label(frameNombre, text='Nombre:', font=('Segoe UI', 20), fg='white', bg='brown', highlightthickness = 0)
+LabelNombre= Label(frameNombre, text='Nombre:',font=('Segoe UI', 20), fg='white', bg='brown', highlightthickness = 0)
 
 LabelNombre.pack(pady=100)
 EntryNombre.pack()
 BotNombre.pack(pady=100)
 
-#Labels
+#                                                           Objetos de la ventana
 LblTitulo =  Label(frame, image=imgTitulo, background='#f0f0f0')
 
-#casillas
-BotJugar    = Button(FrameOpciones, image=imgJugar,     highlightthickness = 0, bd = 0, command=lambda:jugar())
-BotDeshacer = Button(FrameOpciones, image=imgDeshacer,  highlightthickness = 0, bd = 0, command=lambda:volver())
-BotTerminar = Button(FrameOpciones, image=imgTerminar,  highlightthickness = 0, bd = 0, command=lambda:otro())
-BotReiniciar= Button(FrameOpciones, image=imgReiniciar, highlightthickness = 0, bd = 0, command=lambda:reiniciar())
-BotTop      = Button(FrameOpciones, image=imgTop,       highlightthickness = 0, bd = 0)
+BotJugar    = Button(frameOpciones, image=imgJugar,     highlightthickness = 0, bd = 0, command=lambda:jugar())
+BotDeshacer = Button(frameOpciones, image=imgDeshacer,  highlightthickness = 0, bd = 0, command=lambda:volver())
+BotTerminar = Button(frameOpciones, image=imgTerminar,  highlightthickness = 0, bd = 0, command=lambda:otro())
+BotReiniciar= Button(frameOpciones, image=imgReiniciar, highlightthickness = 0, bd = 0, command=lambda:reiniciar())
+BotTop      = Button(frameOpciones, image=imgTop,       highlightthickness = 0, bd = 0)
+BotGuardar  = Button(frameOpciones, image=imgGuardar,   highlightthickness = 0, bd = 0)
+BotCargar   = Button(frameOpciones, image=imgCargar,    highlightthickness = 0, bd = 0)
 
-Bot1 = Button(FrameNums, image=img1_,  highlightthickness = 0, bd = 0, command=lambda:switch(1))
-Bot2 = Button(FrameNums,  image=img2,  highlightthickness = 0, bd = 0, command=lambda:switch(2))
-Bot3 = Button(FrameNums,  image=img3,  highlightthickness = 0, bd = 0, command=lambda:switch(3))
-Bot4 = Button(FrameNums,  image=img4,  highlightthickness = 0, bd = 0, command=lambda:switch(4))
-Bot5 = Button(FrameNums,  image=img5,  highlightthickness = 0, bd = 0, command=lambda:switch(5))
+Bot1 = Button(frameNums, image=img1_,  highlightthickness = 0, bd = 0, command=lambda:switch(1))
+Bot2 = Button(frameNums,  image=img2,  highlightthickness = 0, bd = 0, command=lambda:switch(2))
+Bot3 = Button(frameNums,  image=img3,  highlightthickness = 0, bd = 0, command=lambda:switch(3))
+Bot4 = Button(frameNums,  image=img4,  highlightthickness = 0, bd = 0, command=lambda:switch(4))
+Bot5 = Button(frameNums,  image=img5,  highlightthickness = 0, bd = 0, command=lambda:switch(5))
 
-Bot00 = Button(FrameJuego, image=imgB0, activebackground='#b97a57',  highlightthickness = 0, bd = 0, command=lambda:apuntar(Bot00, 0))
-Bot01 = Button(FrameJuego, image=imgB0, activebackground='#b97a57',  highlightthickness = 0, bd = 0, command=lambda:apuntar(Bot01, 1))
-Bot02 = Button(FrameJuego, image=imgB0, activebackground='#b97a57',  highlightthickness = 0, bd = 0, command=lambda:apuntar(Bot02, 2))
-Bot03 = Button(FrameJuego, image=imgB0, activebackground='#b97a57',  highlightthickness = 0, bd = 0, command=lambda:apuntar(Bot03, 3))
-Bot04 = Button(FrameJuego, image=imgB0, activebackground='#b97a57',  highlightthickness = 0, bd = 0, command=lambda:apuntar(Bot04, 4))
-Bot10 = Button(FrameJuego, image=imgB0, activebackground='#b97a57',  highlightthickness = 0, bd = 0, command=lambda:apuntar(Bot10, 5))
-Bot11 = Button(FrameJuego, image=imgB0, activebackground='#b97a57',  highlightthickness = 0, bd = 0, command=lambda:apuntar(Bot11, 6))
-Bot12 = Button(FrameJuego, image=imgB0, activebackground='#b97a57',  highlightthickness = 0, bd = 0, command=lambda:apuntar(Bot12, 7))
-Bot13 = Button(FrameJuego, image=imgB0, activebackground='#b97a57',  highlightthickness = 0, bd = 0, command=lambda:apuntar(Bot13, 8))
-Bot14 = Button(FrameJuego, image=imgB0, activebackground='#b97a57',  highlightthickness = 0, bd = 0, command=lambda:apuntar(Bot14, 9))
-Bot20 = Button(FrameJuego, image=imgB0, activebackground='#b97a57',  highlightthickness = 0, bd = 0, command=lambda:apuntar(Bot20, 10))
-Bot21 = Button(FrameJuego, image=imgB0, activebackground='#b97a57',  highlightthickness = 0, bd = 0, command=lambda:apuntar(Bot21, 11))
-Bot22 = Button(FrameJuego, image=imgB0, activebackground='#b97a57',  highlightthickness = 0, bd = 0, command=lambda:apuntar(Bot22, 12))
-Bot23 = Button(FrameJuego, image=imgB0, activebackground='#b97a57',  highlightthickness = 0, bd = 0, command=lambda:apuntar(Bot23, 13))
-Bot24 = Button(FrameJuego, image=imgB0, activebackground='#b97a57',  highlightthickness = 0, bd = 0, command=lambda:apuntar(Bot24, 14))
-Bot30 = Button(FrameJuego, image=imgB0, activebackground='#b97a57',  highlightthickness = 0, bd = 0, command=lambda:apuntar(Bot30, 15))
-Bot31 = Button(FrameJuego, image=imgB0, activebackground='#b97a57',  highlightthickness = 0, bd = 0, command=lambda:apuntar(Bot31, 16))
-Bot32 = Button(FrameJuego, image=imgB0, activebackground='#b97a57',  highlightthickness = 0, bd = 0, command=lambda:apuntar(Bot32, 17))
-Bot33 = Button(FrameJuego, image=imgB0, activebackground='#b97a57',  highlightthickness = 0, bd = 0, command=lambda:apuntar(Bot33, 18))
-Bot34 = Button(FrameJuego, image=imgB0, activebackground='#b97a57',  highlightthickness = 0, bd = 0, command=lambda:apuntar(Bot34, 19))
-Bot40 = Button(FrameJuego, image=imgB0, activebackground='#b97a57',  highlightthickness = 0, bd = 0, command=lambda:apuntar(Bot40, 20))
-Bot41 = Button(FrameJuego, image=imgB0, activebackground='#b97a57',  highlightthickness = 0, bd = 0, command=lambda:apuntar(Bot41, 21))
-Bot42 = Button(FrameJuego, image=imgB0, activebackground='#b97a57',  highlightthickness = 0, bd = 0, command=lambda:apuntar(Bot42, 22))
-Bot43 = Button(FrameJuego, image=imgB0, activebackground='#b97a57',  highlightthickness = 0, bd = 0, command=lambda:apuntar(Bot43, 23))
-Bot44 = Button(FrameJuego, image=imgB0, activebackground='#b97a57',  highlightthickness = 0, bd = 0, command=lambda:apuntar(Bot44, 24))
+Bot00 = Button(frameJuego, command=lambda:apuntar(Bot00, 0))
+Bot01 = Button(frameJuego, command=lambda:apuntar(Bot01, 1))
+Bot02 = Button(frameJuego, command=lambda:apuntar(Bot02, 2))
+Bot03 = Button(frameJuego, command=lambda:apuntar(Bot03, 3))
+Bot04 = Button(frameJuego, command=lambda:apuntar(Bot04, 4))
+Bot10 = Button(frameJuego, command=lambda:apuntar(Bot10, 5))
+Bot11 = Button(frameJuego, command=lambda:apuntar(Bot11, 6))
+Bot12 = Button(frameJuego, command=lambda:apuntar(Bot12, 7))
+Bot13 = Button(frameJuego, command=lambda:apuntar(Bot13, 8))
+Bot14 = Button(frameJuego, command=lambda:apuntar(Bot14, 9))
+Bot20 = Button(frameJuego, command=lambda:apuntar(Bot20, 10))
+Bot21 = Button(frameJuego, command=lambda:apuntar(Bot21, 11))
+Bot22 = Button(frameJuego, command=lambda:apuntar(Bot22, 12))
+Bot23 = Button(frameJuego, command=lambda:apuntar(Bot23, 13))
+Bot24 = Button(frameJuego, command=lambda:apuntar(Bot24, 14))
+Bot30 = Button(frameJuego, command=lambda:apuntar(Bot30, 15))
+Bot31 = Button(frameJuego, command=lambda:apuntar(Bot31, 16))
+Bot32 = Button(frameJuego, command=lambda:apuntar(Bot32, 17))
+Bot33 = Button(frameJuego, command=lambda:apuntar(Bot33, 18))
+Bot34 = Button(frameJuego, command=lambda:apuntar(Bot34, 19))
+Bot40 = Button(frameJuego, command=lambda:apuntar(Bot40, 20))
+Bot41 = Button(frameJuego, command=lambda:apuntar(Bot41, 21))
+Bot42 = Button(frameJuego, command=lambda:apuntar(Bot42, 22))
+Bot43 = Button(frameJuego, command=lambda:apuntar(Bot43, 23))
+Bot44 = Button(frameJuego, command=lambda:apuntar(Bot44, 24))
 
 casillas=(
 Bot00,Bot01,Bot02,Bot03,Bot04,
@@ -400,48 +608,48 @@ Bot10,Bot11,Bot12,Bot13,Bot14,
 Bot20,Bot21,Bot22,Bot23,Bot24,
 Bot30,Bot31,Bot32,Bot33,Bot34,
 Bot40,Bot41,Bot42,Bot43,Bot44)
-#Posiciones
-LblTitulo.grid(row = 0, column=0, columnspan=6)
 
-FrameJuego.grid(row=1, column=0, columnspan=6)
-FrameNums.grid(row=1, column=5)
-FrameOpciones.grid(row=2, column=0, columnspan=6)
+for i in casillas:
+    i.config(image=imgB0, activebackground='#b97a57',  highlightthickness = 0, bd = 0)
+
+#                                                           Posiciones de las cosas
+LblTitulo.grid(row=0, column=1, columnspan=4, pady=30)
+
+frameJuego.grid(row=1, column=1, columnspan=4)
+frameNums.grid(row=1, column=5)
+frameOpciones.grid(row=2, column=0, columnspan=6, pady=20)
+frameReloj.grid(row=3, column=0, columnspan=2, padx=20, pady=30)
+BotGuardar.grid(row=3, column=2, pady=30)
+BotCargar.grid(row=3, column=3, columnspan=2, padx=10, pady=30)
 
 LabelWin= Label(frameVictoria, text='¡EXCELENTE!', font=('Segoe UI', 80), fg='yellow', bg='orange',  highlightthickness = 0)
 LabelWin.pack(pady=200)
+
+horas = Label(frameReloj,   text='0',       font=('Segoe UI', 12), bg='light yellow',  highlightthickness = 0)
+minutos = Label(frameReloj, text='0',       font=('Segoe UI', 12), bg='light yellow',  highlightthickness = 0)
+segundos = Label(frameReloj,text='0',       font=('Segoe UI', 12), bg='light yellow',  highlightthickness = 0)
+
+Label(frameReloj,           text='Horas',   font=('Segoe UI', 12), bg='light yellow',  highlightthickness = 0).grid(row=0, column=0)
+Label(frameReloj,           text='Minutos', font=('Segoe UI', 12), bg='light yellow',  highlightthickness = 0).grid(row=0, column=1, padx=20, pady=10)
+Label(frameReloj,           text='Segundos',font=('Segoe UI', 12), bg='light yellow',  highlightthickness = 0).grid(row=0, column=2)
+
+horas.grid(row=1, column=0)
+minutos.grid(row=1, column=1)
+segundos.grid(row=1, column=2)
 
 #Bloques
 for i in range(9):
     for j in range(9):
         if i%2==1 or j%2==1:
-            comparaciones.append(Label(FrameJuego, image=imgN, bg='#b97a57',  highlightthickness = 0))
+            comparaciones.append(Label(frameJuego, image=imgN, bg='#b97a57',  highlightthickness = 0))
             comparaciones[-1].grid(row=i, column=j)
 
-Bot00.grid(row=0, column=0)
-Bot01.grid(row=0, column=2)
-Bot02.grid(row=0, column=4)
-Bot03.grid(row=0, column=6)
-Bot04.grid(row=0, column=8)
-Bot10.grid(row=2, column=0)
-Bot11.grid(row=2, column=2)
-Bot12.grid(row=2, column=4)
-Bot13.grid(row=2, column=6)
-Bot14.grid(row=2, column=8)
-Bot20.grid(row=4, column=0)
-Bot21.grid(row=4, column=2)
-Bot22.grid(row=4, column=4)
-Bot23.grid(row=4, column=6)
-Bot24.grid(row=4, column=8)
-Bot30.grid(row=6, column=0)
-Bot31.grid(row=6, column=2)
-Bot32.grid(row=6, column=4)
-Bot33.grid(row=6, column=6)
-Bot34.grid(row=6, column=8)
-Bot40.grid(row=8, column=0)
-Bot41.grid(row=8, column=2)
-Bot42.grid(row=8, column=4)
-Bot43.grid(row=8, column=6)
-Bot44.grid(row=8, column=8)
+#Casillas
+i=0
+for fila in range(5):
+    for columna in range(5):
+        casillas[i].grid(row=fila*2, column=columna*2)
+        i+=1
 
 #Numeros
 Bot1.grid(row=0, column=0)
@@ -450,15 +658,14 @@ Bot3.grid(row=2, column=0)
 Bot4.grid(row=3, column=0)
 Bot5.grid(row=4, column=0)
 
-#Posición de casillas
-
+#Posición de botones
 BotJugar.grid(row=0, column=0)
-BotDeshacer.grid(row=0, column=1)
+BotDeshacer.grid(row=0, column=1, padx=30)
 BotTerminar.grid(row=0, column=2)
-BotReiniciar.grid(row=0, column=3)
+BotReiniciar.grid(row=0, column=3, padx=30)
 BotTop.grid(row=0, column=4)
 
-#Empaqutados
-
-#Loop
+frame.pack()
+cronometro()
+#                                                           Loop
 ventana.mainloop()
