@@ -59,16 +59,16 @@ def cargar(numNivel):
     for i in range(9):
         for j in range(9):
             if i%2==1 or j%2==1:
-                if cmps[counter]=='.':
-                    imagen=imgN
-                elif cmps[counter]=='A':
+                if cmps[counter]=='A':
                     imagen=imgA
                 elif cmps[counter]=='B':
                     imagen=imgB
                 elif cmps[counter]=='C':
                     imagen=imgC
-                else:
+                elif cmps[counter]=='D':
                     imagen=imgD
+                else:
+                    imagen=imgN
                 counter+=1
                 comparaciones.append(Label(frameJuego, image=imagen, bg='#b97a57',  highlightthickness = 0))
                 comparaciones[-1].grid(row=i, column=j)
@@ -100,6 +100,8 @@ def cargar(numNivel):
         segundos.config(text=str(0))
     minutos.config(text=str(transcurrido[1]))
     horas.config(text=str(transcurrido[0]))
+    for i in range(16):
+        cmps.remove('N')
     print(cmps)
     return
 
@@ -243,6 +245,7 @@ def esValido(posicion):
                             if k!=0 and buffer.count(k)>1 and error==False:
                                 messagebox.showerror('Número en fila', 'Ya había un número en la fila')
                                 error=True
+                        buffer=[]
                         for j in range(5):
                             buffer.append(prueba[j*5+i])
                         print(buffer)
@@ -250,22 +253,52 @@ def esValido(posicion):
                             if k!=0 and buffer.count(k)>1 and error==False:
                                 messagebox.showerror('Número en columna', 'Ya había un número en la columna')
                                 error=True
+                    buffer=0
+                    for i in cmps:
+                        if error==False:
+                            if i=='C' or i=='D':
+                                if i=='C':
+                                    if prueba[buffer]>prueba[buffer+1]:
+                                        messagebox.showerror('Número mayor', 'No cumple la restricción de menor')
+                                        error=True
+                                elif i=='D':
+                                    if prueba[buffer]<prueba[buffer+1]:
+                                        messagebox.showerror('Número menor', 'No cumple la restricción de mayor')
+                                        error=True 
+                        buffer+=1
 
-                LabelE=Label(frameJuego, bg='#b97a57',  highlightthickness = 0)
-                if numero==1:
-                    LabelE.config(image=imgB1D)
-                elif numero==2:
-                    LabelE.config(image=imgB2D)
-                elif numero==3:
-                    LabelE.config(image=imgB3D)  
-                elif numero==4:
-                    LabelE.config(image=imgB4D)
-                else:
-                    LabelE.config(image=imgB5D)
-                LabelE.grid(row=(posicion//5)*2, column=(posicion%5)*2)
-                ventana.bind('<Return>', stop)
-                continuar=False
-                return False
+                    invertida=[]
+                    for i in range(5):
+                        for j in range(5):
+                            invertida.append(prueba[i*5])
+
+                    buffer=0
+                    for i in cmps:
+                        if error==False:
+                            if i=='A':
+                                if invertida[buffer]>invertida[buffer+1]:
+                                    messagebox.showerror('Número mayor', 'No cumple la restricción de menor')
+                                    error=True
+                            elif i=='B':
+                                if invertida[buffer]<invertida[buffer+1]:
+                                    messagebox.showerror('Número menor', 'No cumple la restricción de mayor')
+                                    error=True
+                if error:
+                    LabelE=Label(frameJuego, bg='#b97a57',  highlightthickness = 0)
+                    if numero==1:
+                        LabelE.config(image=imgB1D)
+                    elif numero==2:
+                        LabelE.config(image=imgB2D)
+                    elif numero==3:
+                        LabelE.config(image=imgB3D)  
+                    elif numero==4:
+                        LabelE.config(image=imgB4D)
+                    else:
+                        LabelE.config(image=imgB5D)
+                    LabelE.grid(row=(posicion//5)*2, column=(posicion%5)*2)
+                    ventana.bind('<Return>', stop)
+                    continuar=False
+                    return False
         return True
     else:
         return False
